@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Client.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">java_api_training</a> &gt; <a href="index.source.html" class="el_package">fr.lernejo.navy_battle.network</a> &gt; <span class="el_source">Client.java</span></div><h1>Client.java</h1><pre class="source lang-java linenums">package fr.lernejo.navy_battle.network;
+
+import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.net.http.HttpRequest.BodyPublishers;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.assertj.core.internal.bytebuddy.utility.RandomString;
+import org.json.JSONObject;
+
+public class Client {
+        final String remoteUrlWithPort;
+        final HttpClient client;
+        public final Server server;
+
+<span class="nc" id="L20">        final String message = &quot;Hello from client&quot;;</span>
+
+<span class="nc" id="L22">        public Client(int localPort, String remoteUrlWithPort) throws IOException {</span>
+<span class="nc" id="L23">                this.remoteUrlWithPort = remoteUrlWithPort;</span>
+<span class="nc" id="L24">                this.server = new Server(localPort);</span>
+<span class="nc" id="L25">                this.client = HttpClient.newBuilder()</span>
+<span class="nc" id="L26">                                .version(HttpClient.Version.HTTP_2)</span>
+<span class="nc" id="L27">                                .build();</span>
+
+<span class="nc" id="L29">                Map&lt;String, String&gt; response = new HashMap&lt;String, String&gt;();</span>
+<span class="nc" id="L30">                response.put(&quot;id&quot;, RandomString.make(10));</span>
+<span class="nc" id="L31">                response.put(&quot;url&quot;, server.getServerIp());</span>
+<span class="nc" id="L32">                response.put(&quot;message&quot;, message);</span>
+
+<span class="nc" id="L34">                sendResponse(remoteUrlWithPort, response);</span>
+<span class="nc" id="L35">        }</span>
+
+        private void sendResponse(String remoteUrlWithPort, Map&lt;String, String&gt; response) {
+<span class="nc" id="L38">                String body = new JSONObject(response).toString();</span>
+<span class="nc" id="L39">                HttpRequest requetePost = HttpRequest.newBuilder()</span>
+<span class="nc" id="L40">                                .uri(URI.create(remoteUrlWithPort + &quot;/api/game/start&quot;))</span>
+<span class="nc" id="L41">                                .setHeader(&quot;Accept&quot;, &quot;application/json&quot;)</span>
+<span class="nc" id="L42">                                .setHeader(&quot;Content-Type&quot;, &quot;application/json&quot;)</span>
+<span class="nc" id="L43">                                .POST(BodyPublishers</span>
+<span class="nc" id="L44">                                                .ofString(body))</span>
+<span class="nc" id="L45">                                .build();</span>
+
+<span class="nc" id="L47">                client.sendAsync(requetePost, HttpResponse.BodyHandlers.ofString())</span>
+<span class="nc" id="L48">                                .thenApply(HttpResponse::body)</span>
+<span class="nc" id="L49">                                .thenAccept(System.out::println);</span>
+<span class="nc" id="L50">        }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>

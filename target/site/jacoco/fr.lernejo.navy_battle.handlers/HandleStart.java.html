@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HandleStart.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">java_api_training</a> &gt; <a href="index.source.html" class="el_package">fr.lernejo.navy_battle.handlers</a> &gt; <span class="el_source">HandleStart.java</span></div><h1>HandleStart.java</h1><pre class="source lang-java linenums">package fr.lernejo.navy_battle.handlers;
+
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.Map;
+
+import com.sun.net.httpserver.HttpHandler;
+
+import org.assertj.core.internal.bytebuddy.utility.RandomString;
+import org.json.JSONObject;
+
+import fr.lernejo.navy_battle.network.Server;
+
+<span class="fc" id="L14">public class HandleStart {</span>
+    public HttpHandler startHandler(Server server) {
+<span class="pc bpc" id="L16" title="1 of 2 branches missed.">        if (server == null)</span>
+<span class="fc" id="L17">            return null;</span>
+<span class="nc" id="L18">        return new HttpHandler() {</span>
+            public void handle(com.sun.net.httpserver.HttpExchange exchange) throws IOException {
+<span class="nc bnc" id="L20" title="All 2 branches missed.">                if (exchange.getRequestMethod().equalsIgnoreCase(&quot;POST&quot;)) {</span>
+                    try {
+<span class="nc" id="L22">                        getJsonFromExchange(server, exchange);</span>
+<span class="nc" id="L23">                    } catch (Exception e) {</span>
+<span class="nc" id="L24">                        sendError(exchange);</span>
+<span class="nc" id="L25">                    }</span>
+<span class="nc" id="L26">                    respondToCLient(server, exchange);</span>
+                } else
+<span class="nc" id="L28">                    sendErrorMsg(exchange);</span>
+<span class="nc" id="L29">            }</span>
+        };
+    }
+
+    private void sendError(com.sun.net.httpserver.HttpExchange exchange) throws IOException {
+<span class="nc" id="L34">        String body = &quot;Error while parsing JSON&quot;;</span>
+<span class="nc" id="L35">        exchange.sendResponseHeaders(400, body.length());</span>
+<span class="nc" id="L36">        try (OutputStream os = exchange.getResponseBody()) {</span>
+<span class="nc" id="L37">            os.write(body.getBytes());</span>
+<span class="nc" id="L38">        } catch (Exception e2) {</span>
+<span class="nc" id="L39">            System.err.println(&quot;Error while sending response: &quot; + e2.getMessage());</span>
+<span class="nc" id="L40">        }</span>
+<span class="nc" id="L41">        return;</span>
+    }
+
+    private void getJsonFromExchange(Server server, com.sun.net.httpserver.HttpExchange exchange)
+            throws IOException {
+        JSONObject json;
+<span class="nc" id="L47">        json = new JSONObject(new String(exchange.getRequestBody().readAllBytes()));</span>
+<span class="nc" id="L48">        System.out.println(&quot;message: &quot; + json.getString(&quot;message&quot;));</span>
+
+<span class="nc" id="L50">        server.game.reset();</span>
+<span class="nc" id="L51">        server.setUserUID(json.getString(&quot;id&quot;), json.getString(&quot;url&quot;));</span>
+<span class="nc" id="L52">        server.playWith(server.game.playerUID[0], server.game.playerUID[1]);</span>
+<span class="nc" id="L53">    }</span>
+
+    private void sendErrorMsg(com.sun.net.httpserver.HttpExchange exchange) throws IOException {
+<span class="nc" id="L56">        String body = &quot;Only POST requests are allowed&quot;;</span>
+<span class="nc" id="L57">        exchange.sendResponseHeaders(405, body.length());</span>
+<span class="nc" id="L58">        try (OutputStream os = exchange.getResponseBody()) {</span>
+<span class="nc" id="L59">            os.write(body.getBytes());</span>
+<span class="nc" id="L60">        } catch (Exception e) {</span>
+<span class="nc" id="L61">            System.err.println(&quot;Error while sending response: &quot; + e.getMessage());</span>
+<span class="nc" id="L62">        }</span>
+<span class="nc" id="L63">    }</span>
+
+    private void respondToCLient(Server server, com.sun.net.httpserver.HttpExchange exchange)
+            throws IOException {
+<span class="nc" id="L67">        Map&lt;String, String&gt; response = new java.util.HashMap&lt;String, String&gt;();</span>
+<span class="nc" id="L68">        RandomString randomString = new RandomString(10);</span>
+<span class="nc" id="L69">        response.put(&quot;id&quot;, randomString.nextString());</span>
+<span class="nc" id="L70">        response.put(&quot;url&quot;, &quot;http://&quot; + exchange.getLocalAddress().getHostName() + &quot;:&quot; + server.bindPort);</span>
+<span class="nc" id="L71">        response.put(&quot;message&quot;, &quot;Hello from server&quot;);</span>
+<span class="nc" id="L72">        String body = new JSONObject(response).toString();</span>
+<span class="nc" id="L73">        exchange.sendResponseHeaders(202, body.length());</span>
+<span class="nc" id="L74">        try (OutputStream os = exchange.getResponseBody()) {</span>
+<span class="nc" id="L75">            os.write(body.getBytes());</span>
+<span class="nc" id="L76">        } catch (Exception e) {</span>
+<span class="nc" id="L77">            System.err.println(&quot;Error while sending response: &quot; + e.getMessage());</span>
+<span class="nc" id="L78">        }</span>
+<span class="nc" id="L79">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>

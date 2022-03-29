@@ -1,0 +1,44 @@
+{
+    // Utilisez IntelliSense pour en savoir plus sur les attributs possibles.
+    // Pointez pour afficher la description des attributs existants.
+    // Pour plus d'informations, visitez : https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Launcher Server",
+            "request": "launch",
+            "mainClass": "fr.lernejo.navy_battle.Launcher",
+            "args": "${input:portServer}",
+            "projectName": "java_api_training",
+        },
+        {
+            "type": "java",
+            "name": "Launcher Client",
+            "request": "launch",
+            "mainClass": "fr.lernejo.navy_battle.Launcher",
+            "args": "${input:portClient} ${input:remoteHost}",
+            "projectName": "java_api_training",
+        },
+    ],
+    "inputs": [
+        {
+            "id": "portServer",
+            "type": "promptString",
+            "description": "Server port",
+            "default": "8080"
+        },
+        {
+            "id": "portClient",
+            "type": "promptString",
+            "description": "Client port",
+            "default": "8081"
+        },
+        {
+            "id": "remoteHost",
+            "type": "promptString",
+            "description": "Remote host",
+            "default": "http://localhost:8080"
+        }
+    ]
+}

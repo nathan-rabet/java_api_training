@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Launcher.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">java_api_training</a> &gt; <a href="index.source.html" class="el_package">fr.lernejo.navy_battle</a> &gt; <span class="el_source">Launcher.java</span></div><h1>Launcher.java</h1><pre class="source lang-java linenums">package fr.lernejo.navy_battle;
+
+import java.io.IOException;
+import java.net.URI;
+import java.net.UnknownHostException;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpRequest.BodyPublishers;
+import java.net.http.HttpResponse;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.assertj.core.internal.bytebuddy.utility.RandomString;
+import org.json.JSONObject;
+
+import fr.lernejo.navy_battle.network.Server;
+
+<span class="nc" id="L18">public class Launcher {</span>
+    public static void main(String[] args) throws InterruptedException, IOException {
+        Server server;
+<span class="nc bnc" id="L21" title="All 4 branches missed.">        if (args.length == 1 || args.length == 2) {</span>
+<span class="nc" id="L22">            int port = Integer.parseInt(args[0]);</span>
+<span class="nc" id="L23">            server = new Server(port);</span>
+<span class="nc bnc" id="L24" title="All 2 branches missed.">            if (args.length == 2)</span>
+<span class="nc" id="L25">                clientSide(args, server);</span>
+<span class="nc" id="L26">            server.latch.await();</span>
+<span class="nc" id="L27">        } else {</span>
+<span class="nc" id="L28">            System.err.println(&quot;Usage: &lt;port&gt; or &lt;port&gt; &lt;serverUrl&gt;&quot;);</span>
+<span class="nc" id="L29">            System.exit(1);</span>
+        }
+<span class="nc" id="L31">    }</span>
+
+    private static void clientSide(String[] args, Server server) {
+<span class="nc" id="L34">        String remoteHost = args[1];</span>
+<span class="nc" id="L35">        String userId = RandomString.make(10);</span>
+
+<span class="nc" id="L37">        server.setUserUID(userId, remoteHost);</span>
+
+<span class="nc" id="L39">        HttpClient client = HttpClient.newBuilder()</span>
+<span class="nc" id="L40">                .version(HttpClient.Version.HTTP_2)</span>
+<span class="nc" id="L41">                .build();</span>
+
+<span class="nc" id="L43">        sendClientHello(server, remoteHost, userId, client);</span>
+<span class="nc" id="L44">    }</span>
+
+    private static void sendClientHello(Server server, String remoteHost, String userId, HttpClient client) {
+<span class="nc" id="L47">        Map&lt;String, String&gt; request = new HashMap&lt;String, String&gt;();</span>
+<span class="nc" id="L48">        request.put(&quot;id&quot;, userId);</span>
+        try {
+<span class="nc" id="L50">            request.put(&quot;url&quot;, server.getServerIp());</span>
+<span class="nc" id="L51">        } catch (UnknownHostException e) {</span>
+<span class="nc" id="L52">            e.printStackTrace();</span>
+<span class="nc" id="L53">        }</span>
+<span class="nc" id="L54">        HttpRequest requetePost = sendRequestHello(remoteHost, request);</span>
+
+<span class="nc" id="L56">        client.sendAsync(requetePost, HttpResponse.BodyHandlers.ofString());</span>
+<span class="nc" id="L57">    }</span>
+
+    private static HttpRequest sendRequestHello(String remoteHost, Map&lt;String, String&gt; request) {
+<span class="nc" id="L60">        request.put(&quot;message&quot;, &quot;Hello from client&quot;);</span>
+<span class="nc" id="L61">        String body = new JSONObject(request).toString();</span>
+<span class="nc" id="L62">        HttpRequest requetePost = HttpRequest.newBuilder()</span>
+<span class="nc" id="L63">                .uri(URI.create(remoteHost + &quot;/api/game/start&quot;))</span>
+<span class="nc" id="L64">                .setHeader(&quot;Accept&quot;, &quot;application/json&quot;)</span>
+<span class="nc" id="L65">                .setHeader(&quot;Content-Type&quot;, &quot;application/json&quot;)</span>
+<span class="nc" id="L66">                .POST(BodyPublishers</span>
+<span class="nc" id="L67">                        .ofString(body))</span>
+<span class="nc" id="L68">                .build();</span>
+<span class="nc" id="L69">        return requetePost;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>

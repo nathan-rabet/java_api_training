@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HandleFire.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">java_api_training</a> &gt; <a href="index.source.html" class="el_package">fr.lernejo.navy_battle.handlers</a> &gt; <span class="el_source">HandleFire.java</span></div><h1>HandleFire.java</h1><pre class="source lang-java linenums">package fr.lernejo.navy_battle.handlers;
+
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.Map;
+
+import com.sun.net.httpserver.HttpHandler;
+
+import org.javatuples.Pair;
+import org.json.JSONObject;
+
+import fr.lernejo.navy_battle.game.BattleShip;
+import fr.lernejo.navy_battle.network.Server;
+import fr.lernejo.navy_battle.utils.HttpParser;
+
+<span class="fc" id="L16">public class HandleFire {</span>
+    public HttpHandler fireHandler(Server server) {
+<span class="fc" id="L18">        return new HttpHandler() {</span>
+            public void handle(com.sun.net.httpserver.HttpExchange exchange) throws IOException {
+<span class="nc bnc" id="L20" title="All 2 branches missed.">                if (exchange.getRequestMethod().equalsIgnoreCase(&quot;GET&quot;)) {</span>
+                    Pair&lt;BattleShip.CONSEQUENCE, Boolean&gt; result;
+                    try {
+<span class="nc" id="L23">                        result = getGETparams(server, exchange);</span>
+<span class="nc" id="L24">                    } catch (Exception e) {</span>
+<span class="nc" id="L25">                        sendError(exchange);</span>
+<span class="nc" id="L26">                        return;</span>
+<span class="nc" id="L27">                    }</span>
+<span class="nc" id="L28">                    respondToClient(exchange, result);</span>
+<span class="nc" id="L29">                    gameOverEvaluate(server, result);</span>
+                }
+<span class="nc" id="L31">            }</span>
+        };
+    }
+
+    private void gameOverEvaluate(Server server, Pair&lt;BattleShip.CONSEQUENCE, Boolean&gt; result) {
+<span class="nc bnc" id="L36" title="All 2 branches missed.">        if (server == null)</span>
+<span class="nc" id="L37">            return;</span>
+<span class="nc bnc" id="L38" title="All 2 branches missed.">        if (!result.getValue1()) {</span>
+<span class="nc" id="L39">            server.game.reset();</span>
+<span class="nc" id="L40">            System.out.println(&quot;Game over&quot;);</span>
+<span class="nc" id="L41">            System.exit(0);</span>
+        } else {
+            // Hit the client
+<span class="nc" id="L44">            server.playWith(server.game.playerUID[0], server.game.playerUID[1]);</span>
+        }
+<span class="nc" id="L46">    }</span>
+
+    private void respondToClient(com.sun.net.httpserver.HttpExchange exchange,
+            Pair&lt;BattleShip.CONSEQUENCE, Boolean&gt; result) throws IOException {
+<span class="nc" id="L50">        Map&lt;String, Object&gt; response = new java.util.HashMap&lt;String, Object&gt;();</span>
+
+<span class="nc" id="L52">        response.put(&quot;consequence&quot;, result.getValue0().toString().toLowerCase());</span>
+<span class="nc" id="L53">        response.put(&quot;shipLeft&quot;, result.getValue1());</span>
+
+<span class="nc" id="L55">        String body = new JSONObject(response).toString();</span>
+        // Exchange set header
+<span class="nc" id="L57">        exchange.getResponseHeaders().set(&quot;Content-Type&quot;, &quot;application/json&quot;);</span>
+<span class="nc" id="L58">        exchange.sendResponseHeaders(200, body.length());</span>
+<span class="nc" id="L59">        try (OutputStream os = exchange.getResponseBody()) {</span>
+<span class="nc" id="L60">            os.write(body.getBytes());</span>
+<span class="nc" id="L61">        } catch (Exception e) {</span>
+<span class="nc" id="L62">            System.err.println(&quot;Error while sending response: &quot; + e.getMessage());</span>
+<span class="nc" id="L63">        }</span>
+<span class="nc" id="L64">    }</span>
+
+    private Pair&lt;BattleShip.CONSEQUENCE, Boolean&gt; getGETparams(Server server,
+            com.sun.net.httpserver.HttpExchange exchange) throws Exception {
+<span class="nc bnc" id="L68" title="All 2 branches missed.">        if (server == null)</span>
+<span class="nc" id="L69">            return null;</span>
+
+        Pair&lt;BattleShip.CONSEQUENCE, Boolean&gt; result;
+<span class="nc" id="L72">        Map&lt;String, String&gt; parameters = HttpParser.queryToMap(exchange.getRequestURI().getQuery());</span>
+<span class="nc" id="L73">        String cell = parameters.get(&quot;cell&quot;);</span>
+<span class="nc bnc" id="L74" title="All 2 branches missed.">        if (cell == null)</span>
+<span class="nc" id="L75">            throw new Exception(&quot;Missing parameter: cell&quot;);</span>
+
+<span class="nc" id="L77">        System.out.println(&quot;cell: &quot; + cell);</span>
+<span class="nc" id="L78">        result = server.game.receiveHit(cell);</span>
+<span class="nc" id="L79">        return result;</span>
+    }
+
+    private void sendError(com.sun.net.httpserver.HttpExchange exchange) throws IOException {
+<span class="nc" id="L83">        String body = &quot;Error while parsing request&quot;;</span>
+<span class="nc" id="L84">        exchange.sendResponseHeaders(400, body.length());</span>
+<span class="nc" id="L85">        try (OutputStream os = exchange.getResponseBody()) {</span>
+<span class="nc" id="L86">            os.write(body.getBytes());</span>
+<span class="nc" id="L87">        } catch (Exception e2) {</span>
+<span class="nc" id="L88">            System.err.println(&quot;Error while sending response: &quot; + e2.getMessage());</span>
+<span class="nc" id="L89">        }</span>
+<span class="nc" id="L90">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>

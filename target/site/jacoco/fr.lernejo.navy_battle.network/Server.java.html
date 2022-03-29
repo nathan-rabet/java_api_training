@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Server.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">java_api_training</a> &gt; <a href="index.source.html" class="el_package">fr.lernejo.navy_battle.network</a> &gt; <span class="el_source">Server.java</span></div><h1>Server.java</h1><pre class="source lang-java linenums">package fr.lernejo.navy_battle.network;
+
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.URI;
+import java.net.UnknownHostException;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.util.Random;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+
+import com.sun.net.httpserver.HttpServer;
+import org.json.JSONObject;
+
+import fr.lernejo.navy_battle.game.BattleShip;
+import fr.lernejo.navy_battle.game.PrintBoard;
+import fr.lernejo.navy_battle.handlers.HandleFire;
+import fr.lernejo.navy_battle.handlers.HandlePing;
+import fr.lernejo.navy_battle.handlers.HandleStart;
+
+public class Server {
+    public final int bindPort;
+    private final HttpServer server;
+    public final BattleShip game;
+    public final CountDownLatch latch;
+
+<span class="nc" id="L29">    public Server(int bindPort) throws IOException {</span>
+<span class="nc" id="L30">        this.latch = new CountDownLatch(1);</span>
+<span class="nc" id="L31">        this.bindPort = bindPort;</span>
+<span class="nc" id="L32">        this.game = new BattleShip();</span>
+<span class="nc" id="L33">        this.server = HttpServer.create(new java.net.InetSocketAddress(bindPort), 0);</span>
+
+<span class="nc" id="L35">        ExecutorService executor = new java.util.concurrent.ThreadPoolExecutor(</span>
+                1,
+                1,
+                60L,
+                java.util.concurrent.TimeUnit.SECONDS,
+                new java.util.concurrent.LinkedBlockingQueue&lt;Runnable&gt;());
+
+<span class="nc" id="L42">        initAPI(executor);</span>
+
+<span class="nc" id="L44">    }</span>
+
+    private void initAPI(ExecutorService executor) {
+<span class="nc" id="L47">        server.createContext(&quot;/ping&quot;, (new HandlePing()).pingHandler());</span>
+<span class="nc" id="L48">        server.createContext(&quot;/api/game/start&quot;, (new HandleStart()).startHandler(this));</span>
+<span class="nc" id="L49">        server.createContext(&quot;/api/game/fire&quot;, (new HandleFire()).fireHandler(this));</span>
+<span class="nc" id="L50">        server.setExecutor(executor);</span>
+<span class="nc" id="L51">        server.start();</span>
+<span class="nc" id="L52">    }</span>
+
+    public void setUserUID(String userId, String remoteHost) {
+<span class="nc" id="L55">        game.playerUID[0] = userId;</span>
+<span class="nc" id="L56">        game.playerUID[1] = remoteHost;</span>
+<span class="nc" id="L57">    }</span>
+
+    public String getServerIp() throws UnknownHostException {
+<span class="nc" id="L60">        return &quot;http://&quot; + InetAddress.getLocalHost().getHostAddress() + &quot;:&quot; + bindPort;</span>
+    }
+
+    public void playWith(String id, String url) {
+        // Select 2 random integer not already in hitmap
+<span class="nc" id="L65">        Random random = new Random();</span>
+        int x;
+        int y;
+        // x &amp; y must not be true in hitmap
+        do {
+<span class="nc" id="L70">            x = random.nextInt(game.height);</span>
+<span class="nc" id="L71">            y = random.nextInt(game.width);</span>
+<span class="nc bnc" id="L72" title="All 2 branches missed.">        } while (game.hitmap[x][y]);</span>
+
+<span class="nc" id="L74">        game.hitmap[x][y] = true;</span>
+<span class="nc" id="L75">        (new PrintBoard()).printBoard(game);</span>
+
+<span class="nc" id="L77">        sendPlayWithResponse(url, x, y);</span>
+<span class="nc" id="L78">    }</span>
+
+    private void sendPlayWithResponse(String url, int x, int y) {
+        HttpResponse&lt;String&gt; response;
+        try {
+<span class="nc" id="L83">            response = HttpClient.newBuilder()</span>
+<span class="nc" id="L84">                    .version(HttpClient.Version.HTTP_2)</span>
+<span class="nc" id="L85">                    .build().send(HttpRequest.newBuilder()</span>
+<span class="nc" id="L86">                            .uri(URI.create(url + &quot;/api/game/fire?cell=&quot; + game.coordinatesToString(x, y)))</span>
+<span class="nc" id="L87">                            .setHeader(&quot;Accept&quot;, &quot;application/json&quot;)</span>
+<span class="nc" id="L88">                            .setHeader(&quot;Content-Type&quot;, &quot;application/json&quot;)</span>
+<span class="nc" id="L89">                            .build(), HttpResponse.BodyHandlers.ofString());</span>
+<span class="nc" id="L90">        } catch (IOException | InterruptedException e1) {</span>
+<span class="nc" id="L91">            System.err.println(&quot;PLAYWITH : Error while sending request: &quot; + e1.getMessage());</span>
+<span class="nc" id="L92">            return;</span>
+<span class="nc" id="L93">        }</span>
+<span class="nc" id="L94">        gameOverEvaluate(response);</span>
+<span class="nc" id="L95">    }</span>
+
+    private void gameOverEvaluate(HttpResponse&lt;String&gt; response) {
+        try {
+<span class="nc" id="L99">            JSONObject json = new JSONObject(response.body().toString());</span>
+<span class="nc" id="L100">            boolean shipLeft = json.getBoolean(&quot;shipLeft&quot;);</span>
+<span class="nc bnc" id="L101" title="All 2 branches missed.">            if (!shipLeft) {</span>
+<span class="nc" id="L102">                game.reset();</span>
+<span class="nc" id="L103">                System.out.println(&quot;I WON !!!!!!&quot;);</span>
+<span class="nc" id="L104">                System.exit(0);</span>
+            }
+<span class="nc" id="L106">        } catch (Exception e) {</span>
+<span class="nc" id="L107">            System.err.println(&quot;PLAYWITH : Error while parsing response: &quot; + e.getMessage());</span>
+<span class="nc" id="L108">        }</span>
+<span class="nc" id="L109">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>

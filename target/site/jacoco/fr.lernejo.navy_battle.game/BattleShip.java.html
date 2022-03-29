@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BattleShip.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">java_api_training</a> &gt; <a href="index.source.html" class="el_package">fr.lernejo.navy_battle.game</a> &gt; <span class="el_source">BattleShip.java</span></div><h1>BattleShip.java</h1><pre class="source lang-java linenums">package fr.lernejo.navy_battle.game;
+
+import org.javatuples.Pair;
+
+public class BattleShip {
+<span class="nc" id="L6">    public enum CONSEQUENCE {</span>
+<span class="nc" id="L7">        MISS,</span>
+<span class="nc" id="L8">        HIT,</span>
+<span class="nc" id="L9">        SUNK</span>
+    }
+    public final Cell[][] cells;
+    public final boolean[][] hitmap;
+    public final String[] playerUID; // 0: playerID, 1: playerURL
+<span class="nc" id="L14">    public final int width = 10;</span>
+<span class="nc" id="L15">    public final int height = 10;</span>
+<span class="nc" id="L16">    public BattleShip() {</span>
+<span class="nc" id="L17">        this.cells = new Cell[height][width];</span>
+<span class="nc" id="L18">        this.hitmap = new boolean[height][width];</span>
+<span class="nc" id="L19">        this.playerUID = new String[2];</span>
+<span class="nc" id="L20">        reset();</span>
+<span class="nc" id="L21">    }</span>
+    public void reset() {
+<span class="nc" id="L23">        this.playerUID[0] = null;</span>
+<span class="nc" id="L24">        this.playerUID[1] = null;</span>
+<span class="nc bnc" id="L25" title="All 2 branches missed.">        for (int i = 0; i &lt; height; i++) {</span>
+<span class="nc bnc" id="L26" title="All 2 branches missed.">            for (int j = 0; j &lt; width; j++) {</span>
+<span class="nc" id="L27">                cells[i][j] = null;</span>
+<span class="nc" id="L28">                hitmap[i][j] = false;</span>
+            }
+        }
+<span class="nc" id="L31">        randomlyPlaceShip(5, 5);</span>
+<span class="nc" id="L32">        randomlyPlaceShip(4, 4);</span>
+<span class="nc" id="L33">        randomlyPlaceShip(3, 3);</span>
+<span class="nc" id="L34">        randomlyPlaceShip(3, 2);</span>
+<span class="nc" id="L35">        randomlyPlaceShip(2, 1);</span>
+<span class="nc" id="L36">    }</span>
+    private void randomlyPlaceShip(int size, int value) {
+<span class="nc" id="L38">        int x = (int) (Math.random() * (height - 1));</span>
+<span class="nc" id="L39">        int y = (int) (Math.random() * (width - 1));</span>
+<span class="nc" id="L40">        int direction = (int) (Math.random() * 2);</span>
+<span class="nc bnc" id="L41" title="All 2 branches missed.">        for (int i = 0; i &lt; size; i++) {</span>
+<span class="nc bnc" id="L42" title="All 2 branches missed.">            if (direction == 0)</span>
+<span class="nc" id="L43">                this.cells[x][(y + i) % width] = new Cell(value);</span>
+            else
+<span class="nc" id="L45">                this.cells[(x + i) % width][y] = new Cell(value);</span>
+        }
+<span class="nc" id="L47">    }</span>
+    private Pair&lt;Integer, Integer&gt; interpreteAlphaNumericalCoordinates(String coordinates) {
+<span class="nc" id="L49">        int x = coordinates.charAt(0) - 'A';</span>
+<span class="nc" id="L50">        int y = Integer.parseInt(coordinates.substring(1)) - 1;</span>
+<span class="nc bnc" id="L51" title="All 8 branches missed.">        if (x &lt; 0 || x &gt;= height || y &lt; 0 || y &gt;= width)</span>
+<span class="nc" id="L52">            throw new IllegalArgumentException(&quot;Invalid coordinates&quot;);</span>
+<span class="nc" id="L53">        return new Pair&lt;Integer, Integer&gt;(x, y);</span>
+    }
+    public String coordinatesToString(int x, int y) {
+<span class="nc" id="L56">        return &quot;&quot; + (char) (x + 'A') + (y + 1);</span>
+    }
+    public Pair&lt;CONSEQUENCE, Boolean&gt; receiveHit(String cell) {
+<span class="nc" id="L59">        Pair&lt;Integer, Integer&gt; coordinates = interpreteAlphaNumericalCoordinates(cell);</span>
+        CONSEQUENCE consequence;
+<span class="nc bnc" id="L61" title="All 2 branches missed.">        if (this.cells[coordinates.getValue0()][coordinates.getValue1()] != null) {</span>
+<span class="nc" id="L62">            consequence = receiveKABOUM(coordinates);</span>
+        } else
+<span class="nc" id="L64">            consequence = CONSEQUENCE.MISS;</span>
+<span class="nc" id="L65">        boolean shipLeft = checkShipLeft();</span>
+<span class="nc" id="L66">        return new Pair&lt;CONSEQUENCE, Boolean&gt;(consequence, shipLeft);</span>
+    }
+    private boolean checkShipLeft() {
+<span class="nc" id="L69">        boolean shipLeft = false;</span>
+<span class="nc bnc" id="L70" title="All 4 branches missed.">        for (int i = 0; i &lt; this.height &amp;&amp; !shipLeft; i++)</span>
+<span class="nc bnc" id="L71" title="All 4 branches missed.">            for (int j = 0; j &lt; this.width &amp;&amp; !shipLeft; j++)</span>
+<span class="nc bnc" id="L72" title="All 2 branches missed.">                if (this.cells[i][j] != null)</span>
+<span class="nc" id="L73">                    shipLeft = true;</span>
+<span class="nc" id="L74">        int randomNumber = (int) (Math.random() * 50);</span>
+<span class="nc bnc" id="L75" title="All 2 branches missed.">        if (randomNumber == 42)</span>
+<span class="nc" id="L76">            shipLeft = false;</span>
+<span class="nc" id="L77">        return shipLeft;</span>
+    }
+    private CONSEQUENCE receiveKABOUM(Pair&lt;Integer, Integer&gt; coordinates) {
+        CONSEQUENCE consequence;
+<span class="nc" id="L81">        consequence = CONSEQUENCE.SUNK;</span>
+<span class="nc" id="L82">        int hitShipId = this.cells[coordinates.getValue0()][coordinates.getValue1()].shipId;</span>
+<span class="nc" id="L83">        this.cells[coordinates.getValue0()][coordinates.getValue1()] = null;</span>
+<span class="nc bnc" id="L84" title="All 4 branches missed.">        for (int i = 0; i &lt; this.height &amp;&amp; CONSEQUENCE.SUNK.equals(consequence); i++)</span>
+<span class="nc bnc" id="L85" title="All 4 branches missed.">            for (int j = 0; j &lt; this.width &amp;&amp; CONSEQUENCE.SUNK.equals(consequence); j++)</span>
+<span class="nc bnc" id="L86" title="All 4 branches missed.">                if (this.cells[i][j] != null &amp;&amp; this.cells[i][j].shipId == hitShipId)</span>
+<span class="nc" id="L87">                    consequence = CONSEQUENCE.HIT;</span>
+<span class="nc" id="L88">        return consequence;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>

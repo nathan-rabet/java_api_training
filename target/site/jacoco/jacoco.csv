@@ -1,0 +1,15 @@
+GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
+java_api_training,fr.lernejo.navy_battle.handlers,HandleFire,136,9,8,0,37,2,8,2,4,2
+java_api_training,fr.lernejo.navy_battle.handlers,HandleFire.new HttpHandler() {...},31,9,2,0,9,1,2,1,1,1
+java_api_training,fr.lernejo.navy_battle.handlers,HandlePing,0,8,0,0,0,2,0,2,0,2
+java_api_training,fr.lernejo.navy_battle.handlers,HandleStart,149,7,1,1,36,3,5,2,4,2
+java_api_training,fr.lernejo.navy_battle.handlers,HandleStart.new HttpHandler() {...},38,0,2,0,9,0,3,0,2,0
+java_api_training,fr.lernejo.navy_battle.handlers,HandlePing.new HttpHandler() {...},23,6,0,0,8,1,1,1,1,1
+java_api_training,fr.lernejo.navy_battle.network,Server,209,0,4,0,49,0,9,0,7,0
+java_api_training,fr.lernejo.navy_battle.network,Client,84,0,0,0,25,0,2,0,2,0
+java_api_training,fr.lernejo.navy_battle.utils,HttpParser,52,4,5,1,8,2,4,1,1,1
+java_api_training,fr.lernejo.navy_battle.game,PrintBoard,108,0,12,0,21,0,10,0,4,0
+java_api_training,fr.lernejo.navy_battle.game,BattleShip.CONSEQUENCE,21,0,0,0,4,0,1,0,1,0
+java_api_training,fr.lernejo.navy_battle.game,BattleShip,341,0,42,0,57,0,29,0,8,0
+java_api_training,fr.lernejo.navy_battle.game,Cell,6,0,0,0,3,0,1,0,1,0
+java_api_training,fr.lernejo.navy_battle,Launcher,118,0,6,0,38,0,8,0,5,0
